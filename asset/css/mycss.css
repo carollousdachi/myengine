@@ -1,0 +1,228 @@
+/* Hide scrollbar for Chrome, Safari and Opera */
+
+.dark-mode {
+    background-color: #454d55!important;
+    color: #fff;
+}
+.card-body::-webkit-scrollbar {
+    display: none;
+}
+/* Hide scrollbar for IE, Edge and Firefox */
+
+.swal2-title {
+    color: #fff4f4 !important;
+}
+.swal2-content {
+    color: #908c8c !important;
+}
+.swal2-popup {
+    background: #2d2d2d !important;
+}
+.dataTables_filter {
+    display: none;
+}
+.single-input-primary {
+    display: block;
+    width: 100%;
+    line-height: 40px;
+    border: 1px solid transparent;
+    outline: none;
+    background: #e9e9e9;
+    padding: 0 20px;
+}
+.single-input-primary:focus {
+    outline: none;
+    border: 1px solid #17a2b8;
+}
+.pre-register {
+    width: auto;
+    padding: 0 50px;
+    height: 46px;
+    border-radius: 23px;
+    background-image: linear-gradient(to bottom, #ffc800, #f89825);
+    border: 0;
+    font-weight: bold;
+    color: white !important;
+    cursor: pointer;
+}
+
+.upload-btn{
+    background-image: linear-gradient(to bottom, #2E383F, #2E383F);
+}
+
+.logo-dashboard {
+    padding-top: 20px;
+    margin-left: 70px;
+}
+.padding-custom {
+    padding-left: 35px;
+    padding-right: 35px;
+}
+.space-margin-long {
+    margin: 30px;
+}
+.space-margin-short {
+    margin: 10px;
+}
+/* Style the Image Used to Trigger the Modal */
+
+.message-image {
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+.message-image:hover {
+    opacity: 0.7;
+}
+/* The Modal (background) */
+
+.viewimage {
+    display: none;
+    /* Hidden by default */
+    position: fixed;
+    /* Stay in place */
+    z-index: 1;
+    /* Sit on top */
+    padding-top: 100px;
+    /* Location of the box */
+    left: 0;
+    top: 0;
+    width: 100%;
+    /* Full width */
+    height: 100%;
+    /* Full height */
+    overflow: auto;
+    /* Enable scroll if needed */
+    background-color: rgb(0, 0, 0);
+    /* Fallback color */
+    background-color: rgba(0, 0, 0, 0.9);
+}
+.viewcontent {
+    margin: auto;
+    display: block;
+    width: auto;
+    height: 460px;
+}
+/* Caption of Modal Image (Image Text) - Same Width as the Image */
+
+#caption {
+    margin: auto;
+    display: block;
+    width: auto;
+    text-align: center;
+    color: #ccc;
+    padding: 10px 0;
+    height: 150px;
+}
+/* Add Animation - Zoom in the Modal */
+
+.viewcontent, #caption {
+    -webkit-animation-name: zoom;
+    -webkit-animation-duration: 0.6s;
+    animation-name: zoom;
+    animation-duration: 0.6s;
+}
+@-webkit-keyframes zoom {
+    from {
+        -webkit-transform: scale(0)
+    }
+    to {
+        -webkit-transform: scale(1)
+    }
+}
+@keyframes zoom {
+    from {
+        transform: scale(0)
+    }
+    to {
+        transform: scale(1)
+    }
+}
+/* The Close Button */
+
+.closes {
+    position: absolute;
+    right: 65px;
+    color: #f1f1f1;
+    font-size: 40px;
+    font-weight: bold;
+    transition: 0.3s;
+}
+.closes:hover, .closes:focus {
+    color: #bbb;
+    text-decoration: none;
+    cursor: pointer;
+}
+.loading {
+    position: fixed;
+    z-index: 1000;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    background: rgba( 255, 255, 255, 0.4) url('../../asset/img/ajax-loader2.gif') 50% 50% no-repeat;
+}
+.load {
+    position: absolute;
+    top: 230px;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    /*change these sizes to fit into your project*/
+    width: 100px;
+    height: 100px;
+}
+.load hr {
+    border: 0;
+    margin: 0;
+    width: 40%;
+    height: 40%;
+    position: absolute;
+    border-radius: 50%;
+    animation: spin 2s ease infinite
+}
+.load :first-child {
+    background: #19A68C;
+    animation-delay: -1.5s
+}
+.load :nth-child(2) {
+    background: #F63D3A;
+    animation-delay: -1s
+}
+.load :nth-child(3) {
+    background: #FDA543;
+    animation-delay: -0.5s
+}
+.load :last-child {
+    background: #193B48
+}
+@keyframes spin {
+    0%, 100% {
+        transform: translate(0)
+    }
+    25% {
+        transform: translate(160%)
+    }
+    50% {
+        transform: translate(160%, 160%)
+    }
+    75% {
+        transform: translate(0, 160%)
+    }
+}
+/* 100% Image Width on Smaller Screens */
+
+@media only screen and (max-width: 700px) {
+    .viewcontent {
+        width: 100%;
+    }
+    .text-sm {
+        width: 100%;
+        overflow-x: scroll;
+        overflow-y: none;
+    }
+    .error-page>.headline {
+        float: left;
+        font-size: 55px;
+        text-align: center;
+    }
+}
