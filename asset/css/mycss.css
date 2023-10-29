@@ -1,5 +1,9 @@
 /* Hide scrollbar for Chrome, Safari and Opera */
 
+.dataTables_scrollHeadInner, .table{
+    width:100%!important
+  }
+  
 .dark-mode {
     background-color: #454d55!important;
     color: #fff;

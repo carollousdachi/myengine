@@ -137,27 +137,57 @@ class engine extends CI_Controller
         echo json_encode($result);
     }
 
+    public function show_root()
+    {
+        $search = "";
+        if (!empty($_GET['searchTerm'])) $search = $_GET['searchTerm'];
+        $get_tipe = $_GET['tipe'];
+        $sql = $this->navigation->gets(['tipe' => 0]);
+        $json = [];
+        if ($get_tipe == 1) {
+            foreach ($sql as $key => $value) {
+                if (!empty($search)) {
+                    if (strpos($value->name, $search) !== false) {
+                        $json[] = ['id' => $value->id, 'text' => $value->name];
+                    }
+                } else {
+                    $json[] = ['id' => $value->id, 'text' => $value->name];
+                }
+            }
+        }
+        echo json_encode($json);
+    }
+
     public function editModal()
     {
-        $id = $this->input->post('id');
-        $data = $this->master->edit_form($id);
-        !empty($this->data['option']) ? $option = 1 : $option = 0;
+        $data = $this->master->edit_form($this->input->post('id'));
+        $id = $this->master->get(['id' => $this->input->post('id')]);
         $result = array(
             'data' => $data,
-            'option' => $option,
+            'data_main' => $id
         );
         echo json_encode($result);
     }
 
-    public function call_option()
+    public function call_data_select()
     {
-        empty($this->input->post('id')) ? $id = "" : $id = $this->input->post('id');
-        $data = $this->master->callOption($this->input->post('tipe'), $id);
+        $search = "";
+        if (!empty($_GET['searchTerm'])) $search = $_GET['searchTerm'];
+        $name = ['satu', 'dua', 'tiga'];
+        $json = [];
+        foreach ($name as $key => $value) {
+            if (!empty($search)) {
+                if (strpos($value, $search) !== false) {
+                    $json[] = ['id' => $key, 'text' => $value];
+                }
+            } else {
+                if ($value == 'tiga') {
+                    $json[] = ['id' => $key, 'text' => $value];
+                } else   $json[] = ['id' => $key, 'text' => $value];
+            }
+        }
 
-        $result = array(
-            'data' => $data,
-        );
-        echo json_encode($result);
+        echo json_encode($json);
     }
 
     public function permissionModal()

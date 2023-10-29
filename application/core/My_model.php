@@ -189,56 +189,70 @@ class My_model extends CI_Model
         return $result;
     }
 
-    public function getFormField($name, $type, $validate = "")
+    public function option($name = "", $value = "", $where = "")
     {
-        if ($type !== 'tinyint') {
-            $validate['where'] = "";
-            $validate['must'] = "";
+        $option = "";
+        $option .= '<label>' . ucfirst($name) . '</label>';
+        $option .= '<select id="' . $name . '" name="' . $name . '" class="select2bs4" value="' . $value . '">';
+        if ($name == "tipe") {
+            foreach ($this->tipe as $k => $val) {
+                $value == $k ? $selected = " selected" : $selected = "";
+                $option .= '<option value="' . $k . '"' . $selected . '>' . $val . '</option>';
+            }
         }
+        $option .= '</select>';
+
+        return $option;
     }
 
-    public function callOption($id = "", $name = "", $value = "")
+    public function root_option($name = "", $value = "", $where = "")
     {
+        $option = "";
 
-        $option_root = "";
-        $option_tipe = "";
-        foreach ($this->changeOption as $k => $val) {
-            if ($name == 'tipe' && $name == $val) {
-                $sql = $this->navigation->get(['id' => $id]);
-                $option_tipe .= '<label>' . ucfirst($val) . '</label>';
-                $option_tipe .= '<select id="' . $val . '" name="' . $val . '" class="form-control select2bs4" value="' . $sql->tipe . '">';
-                foreach ($this->tipe as $k => $val) {
-                    !empty($sql->tipe) && $sql->tipe == $k ? $selected = " selected" : $selected = "";
-                    $option_tipe .= '<option value="' . $k . '"' . $selected . '>' . $val . '</option>';
-                }
-                $option_tipe .= '</select>';
-                if ($sql->tipe == 1) {
-                    $option_root .= '<label>' . ucfirst('root') . '</label>';
-                    $option_root .= '<select id="root" name="root" class="form-control select2bs4" value="' . $sql->root . '">';
-                    foreach ($this->navigation->gets(['tipe' => 0]) as $k => $val) {
-                        !empty($sql->id) && $sql->root == $val->id ? $selected = " selected" : $selected = "";
-                        $option_root .= '<option value="' . $val->id . '"' . $selected . '>' . $val->name . '</option>';
-                    }
-                    $option_root .= '</select>';
+        $option .= '<label>' . ucfirst($name) . '</label>';
+        $option .= '<select id="' . $name . '" name="' . $name . '" class="select2bs4" value="' . $value . '" style="width:100%;">';
+        if (!empty($where)) {
+            $sql = $this->navigation->get(['id' => $where]);
+            if ($sql->tipe == 1) {
+                foreach ($this->navigation->gets(['tipe' => 0]) as $k => $val) {
+                    $value == $val->id ? $selected = " selected" : $selected = "";
+                    $option .= '<option value="' . $val->id . '"' . $selected . '>' . $val->name . '</option>';
                 }
             }
         }
+        $option .= '</select>';
 
-        $result = $option_tipe . $option_root;
+        return $option;
+    }
 
+    public function callOption($name = "", $value = "", $where = "")
+    {
+        $option = "";
+        if ($name == 'root') {
+            $option .= $this->navigation->root_option($name, $value, $where);
+        } else {
+            $option .= $this->master->option($name, $value, $where);
+        }
+
+        $result = $option;
         return $result;
     }
 
     public function add_form()
     {
-        $sql = array_diff($this->master->get_field_original(), ['id', 'action']);
+        $validate = array_merge($this->disable, $this->hiddenColumn);
+        $sql = array_diff($this->master->get_field_original(), $validate);
         foreach ($sql as $key => $value) {
-            if ($value == 'password') {
-                $this->form_html .= '<label>' . ucfirst($value) . '</label>';
-                $this->form_html .= '<input id="' . $value . '" name="' . $value . '" class="form-control" type="password">';
+            if (in_array($value, $this->changeOption)) {
+                $this->form_html .= $this->master->callOption($value);
             } else {
-                $this->form_html .= '<label>' . ucfirst($value) . '</label>';
-                $this->form_html .= '<input id="' . $value . '" name="' . $value . '" class="form-control" type="text">';
+                if ($value == 'password') {
+                    $this->form_html .= '<label>' . ucfirst($value) . '</label>';
+                    $this->form_html .= '<input id="' . $value . '" name="' . $value . '" class="form-control" type="password">';
+                } else {
+                    $this->form_html .= '<label>' . ucfirst($value) . '</label>';
+                    $this->form_html .= '<input id="' . $value . '" name="' . $value . '" class="form-control" type="text">';
+                }
             }
         }
 
@@ -252,9 +266,8 @@ class My_model extends CI_Model
         $validate = array_merge($this->disable, $this->hiddenColumn);
         foreach ($sql as $key => $value) {
             if (!in_array($key, $validate)) {
-
                 if (in_array($key, $this->changeOption)) {
-                    $this->form_html .= '<div id="call-option-' . $key . '"></div>';
+                    $this->form_html .= $this->master->callOption($key, $value, $id);
                 } else {
                     $this->form_html .= '<label>' . ucfirst($key) . '</label>';
                     if ($key == 'password') {
@@ -292,8 +305,8 @@ class My_model extends CI_Model
     public function dataTablesCss()
     {
         if (!empty($this->buttons)) {
-            $width = "250px";
-        } else $width = "150px";
+            $width = "300px";
+        } else $width = "200px";
 
         return $width;
     }

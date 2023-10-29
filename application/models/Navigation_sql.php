@@ -8,6 +8,6 @@ class Navigation_sql extends My_model
         parent::__construct();
         $CI = &get_instance();
         $this->table = "navigation";
-        $this->disable = ['id'];
+        $this->disable = ['id', 'action'];
     }
 }
