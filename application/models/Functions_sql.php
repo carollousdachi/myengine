@@ -7,6 +7,8 @@ class Functions_sql extends My_model
     {
         parent::__construct();
         $CI = &get_instance();
-        $this->table = "function";
+        $this->table = "functions";
+        $this->buttons = ['detail' => 'warning'];
+        $this->table_prefix = "FC";
     }
 }

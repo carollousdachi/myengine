@@ -48,19 +48,9 @@
                                         ×
                                     </button>
                                 </div>
-                                <div class="modal-body">
-                                    <form id="form-edit" method="post">
-                                        <div id="form-field-edit"></div>
-                                    </form>
-                                </div>
-                                <div class="modal-footer">
-                                    <button class="btn btn-success" id="btn_update_data" type="button">
-                                        Update
-                                    </button>
-                                    <button class="btn btn-default" data-dismiss="modal" type="button">
-                                        Close
-                                    </button>
-                                </div>
+                                <form id="form-edit" method="post">
+                                    <div id="form-field-edit"></div>
+                                </form>
                             </div>
                         </div>
                     </div>

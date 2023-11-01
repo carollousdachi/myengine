@@ -23,6 +23,7 @@ class engine extends CI_Controller
         $this->data['option'] = [];
         $this->data['join_table'] = array();
         $this->data['session_validation'] = "";
+        $this->data['table_prefix'] = "";
         $this->main = $path;
         if (!empty($database)) {
             $this->load->model($this->main . '_sql', 'master');
@@ -37,14 +38,42 @@ class engine extends CI_Controller
     {
         $this->data['getMenu'] = $this->main;
         $this->data['sidebar'] = "";
-        foreach ($this->navigation->gets() as $key => $value) {
-            $this->main == $value->link ? $active = "active" : $active = "";
-            $this->data['sidebar'] .= "<li class='nav-item'>";
-            $this->data['sidebar'] .= "<a href='" . $value->link . "' class='nav-link " . $active . "'>";
-            $this->data['sidebar'] .= "<i class='nav-icon " . $value->icon . "'></i>";
-            $this->data['sidebar'] .= "<p>" . $value->name . "</p></a>";
-            $this->data['sidebar'] .= "</li>";
+        $tipe = [1 => 'Root', 0 => 'Master', 2 => 'Single'];
+        $array = [];
+        foreach ($this->navigation->gets(['tipe' => 1]) as $key => $value) {
+            if (!in_array($value->root, $array)) {
+                $array[] = $value->root;
+            }
         }
+
+        foreach ($this->navigation->gets(['tipe !=' => 1]) as $key => $value) {
+            $this->main == $value->link ? $active = "active" : $active = "";
+            if (!in_array($value->id, $array)) {
+                $this->data['sidebar'] .= "<li class='nav-item'>";
+                $this->data['sidebar'] .= "<a href='" . $value->link . "' class='nav-link " . $active . "'>";
+                $this->data['sidebar'] .= "<i class='nav-icon " . $value->icon . "'></i>";
+                $this->data['sidebar'] .= "<p>" . $value->name . "</p></a>";
+                $this->data['sidebar'] .= "</li>";
+            }
+        }
+        foreach ($array as $k => $val) {
+            $sql = $this->navigation->get(['id' => $val]);
+            $this->data['sidebar'] .= "<li class='nav-item'>";
+            $this->data['sidebar'] .= "<a href='" . $sql->link . "' class='nav-link " . $active . "'>";
+            $this->data['sidebar'] .= "<i class='nav-icon " . $sql->icon . "'></i>";
+            $this->data['sidebar'] .= "<p>" . $sql->name . "<i class='fas fa-angle-left right'></i></p></a>";
+            $this->data['sidebar'] .= '<ul class="nav nav-treeview">';
+            foreach ($this->navigation->gets(['root' => $val]) as $key => $value) {
+                $this->main == $value->link ? $active = "active" : $active = "";
+                $this->data['sidebar'] .= "<li class='nav-item'>";
+                $this->data['sidebar'] .= "<a href='" . $value->link . "' class='nav-link " . $active . "'>";
+                $this->data['sidebar'] .= "<i class='nav-icon " . $value->icon . "'></i>";
+                $this->data['sidebar'] .= "<p>" . $value->name . "</p></a>";
+                $this->data['sidebar'] .= "</li>";
+            }
+            $this->data['sidebar'] .= "</ul></li>";
+        }
+
         $this->load->view('element/template', $this->data);
     }
 
@@ -71,7 +100,7 @@ class engine extends CI_Controller
                                 if ($val == 'id') {
                                     $row[] = ++$no;
                                 } else {
-                                    $row[] = $value->$val;
+                                    $row[] = $this->master->changeColumnValues($val, $value->$val);
                                 }
                             }
                         }
@@ -112,10 +141,9 @@ class engine extends CI_Controller
             } while (($end - $start) < $timeTarget);
         }
 
-        $id = str_split($this->main, 4);
-        $id = strtoupper($id[0]);
-        $data['id'] = $this->master->getLastId(0, $id);
-        $data['creator'] = 'carollousdc';
+
+        $data['id'] = $this->master->getLastId(0);
+        $data['creator'] = $this->user->get(['id' => $_SESSION['id']])->username;
 
         $data = $this->master->add($data);
 
@@ -126,16 +154,118 @@ class engine extends CI_Controller
         echo json_encode($output);
     }
 
+    public function edit()
+    {
+        $where = ['id' => $this->input->post('id')];
+        foreach ($this->input->post('data') as $key => $value) {
+            $input_name = explode('_edit', $value['name']);
+            foreach ($value as $k => $val) {
+                $data[$input_name[0]] = $val;
+            }
+        }
+
+        if (isset($data['root']) && empty($data['root'])) $data['root'] = 0;
+        $data['creator'] = $this->user->get(['id' => $_SESSION['id']])->username;
+        $result = $this->master->edit($data, $where);
+        echo json_encode($result);
+    }
+
+    public function delete()
+    {
+        $id = $this->input->post('id');
+        $data = $this->master->delete(['id' => $id]);
+        echo json_encode($data);
+    }
+
+    public function action_detail()
+    {
+        $table_detail = $this->main . '_detail';
+        $result = "";
+        $i = 1;
+        foreach ($this->input->post('data') as $key => $value) {
+            foreach ($value as $k => $val) {
+                if ($k == 'value') {
+                    if (!empty($this->$table_detail->get(['hash' => $val]))) {
+                        $sql = $this->$table_detail->get(['hash' => $val]);
+                        $data[] = array(
+                            'id' => $sql->id,
+                            'functions' => $this->input->post('id'),
+                            'name' => $sql->name,
+                            'hash' => $sql->hash,
+                            'creator' => $this->user->get(['id' => $_SESSION['id']])->username
+                        );
+                    } else {
+                        $data[] = array(
+                            'id' => $this->$table_detail->getLastId($i),
+                            'functions' => $this->input->post('id'),
+                            'name' => $val,
+                            'hash' => sprintf("%u", crc32($this->$table_detail->getLastId($i))),
+                            'creator' => $this->user->get(['id' => $_SESSION['id']])->username
+                        );
+                        $i++;
+                    }
+                }
+            }
+        }
+
+        if (!empty($data)) {
+            if (!empty($this->$table_detail->gets(['functions' => $this->input->post('id')]))) {
+                $this->$table_detail->delete(['functions' => $this->input->post('id')]);
+            }
+            $result = $this->$table_detail->insert_batch($data);
+        }
+
+
+        $output = array(
+            'result' => $result,
+        );
+
+        echo json_encode($output);
+    }
 
     public function addModal()
     {
 
-        $data = $this->master->add_form();
+        $data = $this->master->add_form($this->data['join_table']);
         $result = array(
             'data' => $data,
         );
         echo json_encode($result);
     }
+
+
+    public function editModal()
+    {
+        $data = $this->master->edit_form($this->input->post('id'), $this->data['join_table']);
+        $id = $this->master->get(['id' => $this->input->post('id')]);
+        $result = array(
+            'data' => $data,
+            'data_main' => $id
+        );
+        echo json_encode($result);
+    }
+    public function detailModal()
+    {
+
+        $data = $this->master->detail_form($this->input->post('id'), 'functions_detail');
+        $result = array(
+            'data' => $data,
+        );
+        echo json_encode($result);
+    }
+
+    public function permissionModal()
+    {
+
+        $html = '';
+
+        $data = $html;
+        $result = array(
+            "data" => $data
+        );
+        echo json_encode($result);
+    }
+
 
     public function show_root()
     {
@@ -158,57 +288,6 @@ class engine extends CI_Controller
         echo json_encode($json);
     }
 
-    public function editModal()
-    {
-        $data = $this->master->edit_form($this->input->post('id'));
-        $id = $this->master->get(['id' => $this->input->post('id')]);
-        $result = array(
-            'data' => $data,
-            'data_main' => $id
-        );
-        echo json_encode($result);
-    }
-
-    public function call_data_select()
-    {
-        $search = "";
-        if (!empty($_GET['searchTerm'])) $search = $_GET['searchTerm'];
-        $name = ['satu', 'dua', 'tiga'];
-        $json = [];
-        foreach ($name as $key => $value) {
-            if (!empty($search)) {
-                if (strpos($value, $search) !== false) {
-                    $json[] = ['id' => $key, 'text' => $value];
-                }
-            } else {
-                if ($value == 'tiga') {
-                    $json[] = ['id' => $key, 'text' => $value];
-                } else   $json[] = ['id' => $key, 'text' => $value];
-            }
-        }
-
-        echo json_encode($json);
-    }
-
-    public function permissionModal()
-    {
-
-        $html = '<div class="col-md-6"><div class="form-group">';
-        $permission = $this->permission->gets();
-        foreach ($permission as $key => $value) {
-            $html .= '<div class="custom-control custom-checkbox">';
-            $html .= '<input class="form-check-input" type="checkbox" name="' . $value->name . '" value="' . $value->id . '">';
-            $html .= '<label for="customCheckbox1" class="form-check-label">' . $value->name . '</label></div>';
-        }
-        $html .= '</div></div>';
-
-        $data = $html;
-        $result = array(
-            "data" => $data
-        );
-        echo json_encode($result);
-    }
-
     public function dataTablesCss()
     {
         $dt = $this->master->dataTablesCss();
@@ -217,15 +296,6 @@ class engine extends CI_Controller
             "width" => $dt,
         );
 
-        echo json_encode($result);
-    }
-
-    public function test_input()
-    {
-        $data = '';
-        $result = array(
-            'test' => $data
-        );
         echo json_encode($result);
     }
 }

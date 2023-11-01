@@ -7,9 +7,12 @@ class My_model extends CI_Model
     public $table = "";
     public $table_prefix = "";
     public $changeHeaderName = ['id' => 'No', 'create_date' => "Tanggal"];
+    public $changeColumnValue = array();
+    public $changeColumnFunctions = array();
     public $tipe = ['Master', 'Root', 'Single'];
     public $hiddenColumn = ['creator', 'create_date', 'status'];
     public $column_serch = ["name"];
+    public $column_order = [];
     public $changeOption = ["tipe", "root"];
     public $disable = [];
     public $buttons = [];
@@ -18,6 +21,11 @@ class My_model extends CI_Model
     public function add($data)
     {
         return $this->db->insert($this->table, $data);
+    }
+
+    public function insert_batch($data)
+    {
+        return $this->db->insert_batch($this->table, $data);
     }
 
     public function gets($where = "", $order = "", $group = "")
@@ -55,7 +63,6 @@ class My_model extends CI_Model
             if (empty($this->table_prefix)) {
                 $this->table_prefix = substr($this->table, 0, 1);
             }
-
             $code = $this->table_prefix . date('Ymd');
         }
         $this->db->select_max('id');
@@ -73,6 +80,20 @@ class My_model extends CI_Model
         return $code . substr($id, strlen($id) - 5);
     }
 
+    public function edit($data, $where)
+    {
+        return $this->db->update($this->table, $data, $where);
+    }
+
+    public function delete($where, $delete_db = 1)
+    {
+        if (empty($delete_db)) {
+            return $this->db->update($this->table, ['status' => 1], $where);
+        } else {
+            return $this->db->delete($this->table, $where);
+        }
+    }
+
     public function get_field_data()
     {
         $allfield = $this->db->list_fields($this->table);
@@ -87,8 +108,33 @@ class My_model extends CI_Model
         $allfield = $this->db->list_fields($this->table);
         $res = ['action'];
         $res = array_merge($allfield, $res);
-        $res = array_reverse(array_reverse(array_diff($res, ["creator", "create_date", "status"])));
+        $disable = array_merge($this->disable, ["id", "creator", "create_date", "status"]);
+        $res = array_reverse(array_reverse(array_diff($res, $disable)));
         return $res;
+    }
+
+    public function changeColumnValues($column_name, $value)
+    {
+        if (!empty($this->changeColumnValue[$column_name])) {
+            if (strpos($value, 'NAVI') !== false) {
+                $table = $this->changeColumnValue[$column_name];
+                $result = $this->$table->get(['id' => $value])->name;
+            } else {
+                $result = $value;
+            }
+        } else {
+            if (!empty($this->changeColumnFunctions[$column_name])) {
+                $table = $this->changeColumnFunctions[$column_name];
+                if (!empty($this->functions_detail->get(['hash' => $value]))) {
+                    $result = $this->functions_detail->get(['hash' => $value])->name;
+                }
+            } else {
+                $result = $value;
+            }
+        }
+
+        if (empty($result)) $result = "-";
+        return $result;
     }
 
     private function _get_data_query()
@@ -106,17 +152,23 @@ class My_model extends CI_Model
 
         $fieldName = $this->get_field_original();
         foreach ($fieldName as $key => $value) {
-            if (!in_array($value, $this->hiddenColumn)) {
-                if (!empty($this->changeHeaderName[$value])) {
-                    $order[] = $value;
-                } else {
-                    $order[] = $value;
-                }
+            if (!empty($this->changeHeaderName[$value])) {
+                $order[] = $value;
+            } else {
+                $order[] = $value;
             }
         }
 
         if (isset($_POST['order']) && !empty($order[$_POST['order']['0']['column']])) {
-            $this->db->order_by($order[$_POST['order']['0']['column']], $_POST['order']['0']['dir']);
+            if (!empty($this->column_order)) {
+                foreach ($this->column_order as $value) {
+                    if ($order[$_POST['order']['0']['column']] == $value) {
+                        $this->db->order_by($value, $_POST['order']['0']['dir']);
+                    }
+                }
+            } else {
+                $this->db->order_by($order[$_POST['order']['0']['column']], $_POST['order']['0']['dir']);
+            }
         } else {
             $this->db->order_by('name', 'ASC');
         }
@@ -189,28 +241,50 @@ class My_model extends CI_Model
         return $result;
     }
 
-    public function option($name = "", $value = "", $where = "")
+    public function option($name = "", $value = "", $where = "", $type = "", $join = "")
     {
         $option = "";
+        if (empty($value)) $value = "";
         $option .= '<label>' . ucfirst($name) . '</label>';
-        $option .= '<select id="' . $name . '" name="' . $name . '" class="select2bs4" value="' . $value . '">';
+        $option .= '<select id="' . $name . $type . '" name="' . $name  . $type . '" class="select2bs4" value="' . $value . '">';
         if ($name == "tipe") {
             foreach ($this->tipe as $k => $val) {
                 $value == $k ? $selected = " selected" : $selected = "";
                 $option .= '<option value="' . $k . '"' . $selected . '>' . $val . '</option>';
             }
+        } else {
+            if (!empty($this->functions->get(['kode' => $name]))) {
+                $id = $this->functions->get(['kode' => $name]);
+                $call_option_other_table = $this->functions_detail->gets(['functions' => $id->id]);
+                foreach ($call_option_other_table as $k => $val) {
+                    $value == $val->hash ? $selected = " selected" : $selected = "";
+                    $option .= '<option value="' . $val->hash . '"' . $selected . '>' . $val->name . '</option>';
+                }
+            } else {
+                if ($name == $join) {
+                    $call_option_other_table = $this->$name->gets();
+                    foreach ($call_option_other_table as $k => $val) {
+                        $value == $val->id ? $selected = " selected" : $selected = "";
+                        $option .= '<option value="' . $val->id . '"' . $selected . '>' . $val->name . '</option>';
+                    }
+                }
+            }
         }
+
+
         $option .= '</select>';
 
         return $option;
     }
 
-    public function root_option($name = "", $value = "", $where = "")
+
+
+    public function root_option($name = "", $value = "", $where = "", $type = "")
     {
         $option = "";
 
         $option .= '<label>' . ucfirst($name) . '</label>';
-        $option .= '<select id="' . $name . '" name="' . $name . '" class="select2bs4" value="' . $value . '" style="width:100%;">';
+        $option .= '<select id="' . $name  . $type . '" name="' . $name  . $type . '" class="select2bs4" value="' . $value . '" style="width:100%;">';
         if (!empty($where)) {
             $sql = $this->navigation->get(['id' => $where]);
             if ($sql->tipe == 1) {
@@ -225,33 +299,60 @@ class My_model extends CI_Model
         return $option;
     }
 
-    public function callOption($name = "", $value = "", $where = "")
+    public function callOption($name = "", $value = "", $where = "", $type = "", $join = "")
     {
         $option = "";
         if ($name == 'root') {
-            $option .= $this->navigation->root_option($name, $value, $where);
+            $option .= $this->navigation->root_option($name, $value, $where, $type);
         } else {
-            $option .= $this->master->option($name, $value, $where);
+            $option .= $this->master->option($name, $value, $where, $type, $join);
         }
 
         $result = $option;
         return $result;
     }
 
-    public function add_form()
+    public function detail_option($pk = "", $name = "", $join = "")
     {
-        $validate = array_merge($this->disable, $this->hiddenColumn);
-        $sql = array_diff($this->master->get_field_original(), $validate);
-        foreach ($sql as $key => $value) {
-            if (in_array($value, $this->changeOption)) {
-                $this->form_html .= $this->master->callOption($value);
-            } else {
-                if ($value == 'password') {
-                    $this->form_html .= '<label>' . ucfirst($value) . '</label>';
-                    $this->form_html .= '<input id="' . $value . '" name="' . $value . '" class="form-control" type="password">';
-                } else {
-                    $this->form_html .= '<label>' . ucfirst($value) . '</label>';
-                    $this->form_html .= '<input id="' . $value . '" name="' . $value . '" class="form-control" type="text">';
+        $option = "";
+        $option .= '<label>' . ucfirst($name) . '</label>';
+        $option .= '<select id="' . $name . '" name="' . $name  . '" class="select2bs4" style="width:100%;"  multiple="multiple">';
+        $call_option_other_table = $this->$join->gets(['functions' => $pk]);
+        if (!empty($call_option_other_table)) {
+            foreach ($call_option_other_table as $k => $val) {
+                $option .= '<option value="' . $val->hash . '" selected="selected">' . $val->name . '</option>';
+            }
+        }
+        $option .= '</select>';
+
+        return $option;
+    }
+
+    public function add_form($join = array())
+    {
+        $validate_option = array_merge($this->changeOption, $join);
+        $sql = $this->master->get_field_original();
+        $fields = $this->db->field_data($this->table);
+        foreach ($fields as $key => $value) {
+            if (in_array($value->name, $sql)) {
+                if ($value->name !== 'action') {
+                    if (in_array($value->name, $validate_option)) {
+                        $this->form_html .= $this->master->callOption($value->name, "", "", "", $value->name);
+                    } else {
+                        if ($value->type == 'int') {
+                            empty($this->master->gets()) ? $count = 1 : $count = count($this->master->gets()) + 1;
+                            $this->form_html .= '<label>' . ucfirst($value->name) . '</label>';
+                            $this->form_html .= '<input id="' . $value->name . '" name="' . $value->name . '" class="form-control" type="number" min="' . $count . '" value=' . $count . '>';
+                        } else {
+                            if ($value->name == 'password') {
+                                $this->form_html .= '<label>' . ucfirst($value->type) . '</label>';
+                                $this->form_html .= '<input id="' . $value->name . '" name="' . $value->name . '" class="form-control" type="password">';
+                            } else {
+                                $this->form_html .= '<label>' . ucfirst($value->name) . '</label>';
+                                $this->form_html .= '<input id="' . $value->name . '" name="' . $value->name . '" class="form-control" type="text">';
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -260,14 +361,16 @@ class My_model extends CI_Model
         return $result;
     }
 
-    public function edit_form($id)
+    public function edit_form($id, $join = array())
     {
         $sql = $this->master->get(['id' => $id]);
-        $validate = array_merge($this->disable, $this->hiddenColumn);
+        $validate_option = array_merge($this->changeOption, $join);
+        $validate = $this->master->get_field_original();
+        $this->form_html .= '<div class="modal-body">';
         foreach ($sql as $key => $value) {
-            if (!in_array($key, $validate)) {
-                if (in_array($key, $this->changeOption)) {
-                    $this->form_html .= $this->master->callOption($key, $value, $id);
+            if (in_array($key, $validate)) {
+                if (in_array($key, $validate_option)) {
+                    $this->form_html .= $this->master->callOption($key, $value, $id, '_edit', $key);
                 } else {
                     $this->form_html .= '<label>' . ucfirst($key) . '</label>';
                     if ($key == 'password') {
@@ -278,6 +381,25 @@ class My_model extends CI_Model
                 }
             }
         }
+        $this->form_html .= '</div>';
+        $this->form_html .= '<div class="modal-footer">';
+        $this->form_html .= '<button data-id="' . $id . '" class="btn btn-success btn_update" id="btn_update_data" type="button">Update</button>';
+        $this->form_html .= '<button class="btn btn-default" data-dismiss="modal" type="button">Close</button>';
+        $this->form_html .= '</div>';
+        $result = $this->form_html;
+        return $result;
+    }
+
+    public function detail_form($id, $table_detail)
+    {
+
+        $this->form_html .= '<div class="modal-body">';
+        $this->form_html .= $this->master->detail_option($id, 'functions', $table_detail);
+        $this->form_html .= '</div>';
+        $this->form_html .= '<div class="modal-footer">';
+        $this->form_html .= '<button data-id="' . $id . '" class="btn btn-success btn_detail" id="btn_detail_data" type="button">Update</button>';
+        $this->form_html .= '<button class="btn btn-default" data-dismiss="modal" type="button">Close</button>';
+        $this->form_html .= '</div>';
         $result = $this->form_html;
         return $result;
     }

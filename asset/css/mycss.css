@@ -1,7 +1,7 @@
 /* Hide scrollbar for Chrome, Safari and Opera */
 
 .dataTables_scrollHeadInner, .table{
-    width:100%!important
+    width:100%!important;
   }
   
 .dark-mode {

@@ -47,19 +47,26 @@
                                         ×
                                     </button>
                                 </div>
-                                <div class="modal-body">
-                                    <form id="form-edit" method="post">
-                                        <div id="form-field"></div>
-                                    </form>
-                                </div>
-                                <div class="modal-footer">
-                                    <button class="btn btn-success" id="btn_update_data" type="button">
-                                        Update
+                                <form id="form-edit" method="post">
+                                    <div id="form-field-edit"></div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal fade" id="detailModal" role="dialog">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h4 class="modal-title">
+                                        Details Data <?= ucfirst($getMenu) ?>
+                                    </h4>
+                                    <button class="close" data-dismiss="modal" type="button">
+                                        ×
                                     </button>
-                                    <button class="btn btn-default" data-dismiss="modal" type="button">
-                                        Close
-                                    </button>
                                 </div>
+                                <form id="form-detail" method="post">
+                                    <div id="form-field-detail"></div>
+                                </form>
                             </div>
                         </div>
                     </div>

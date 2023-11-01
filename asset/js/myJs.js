@@ -20,29 +20,76 @@ $(function () {
 				$(".select2bs4").select2({
 					theme: "bootstrap4",
 				});
-				callTest(response.data_main.root);
-				callRoot(0);
+				callTest(response.data_main.root, '_edit');
+				callRoot(response.data_main.tipe, '_edit');
+				updateData();
 			},
 		});
 	});
 
-	$("#example1").on("click", ".btn_permission", function () {
+	$("#example1").on("click", ".btn_detail", function () {
 		var id = $(this).attr("data-id");
 		$.ajax({
-			url: link + "/permissionModal",
+			url: link + "/detailModal",
 			type: "POST",
 			data: {
 				id: id
 			},
 			dataType: "json",
 			success: function (response) {
-				$("#permissionModal").modal("show");
-				$("#form-field-permission").html(response.data);
+				$("#detailModal").modal("show");
+				$("#form-field-detail").html(response.data);
+				detailData();
+				$("#functions").select2({
+					theme: "bootstrap4",
+					tags: true,
+				});
 			},
 		});
 	});
 
 });
+
+function updateData() {
+	$("#btn_update_data").on("click", function () {
+		formData = {
+			data: $("#form-edit").serializeArray(),
+			id: $(this).attr("data-id")
+		};
+		$.ajax({
+			url: link + "/edit",
+			type: "POST",
+			dataType: "json",
+			data: formData,
+			success: function (response) {
+				$("#editModal").modal("hide");
+				$("#example1").DataTable().ajax.reload(null, false);
+			},
+		});
+	});
+}
+
+function detailData() {
+	$("#btn_detail_data").on("click", function () {
+		formData = {
+			data: $("#form-detail").serializeArray(),
+			id: $(this).attr("data-id")
+		};
+		$.ajax({
+			url: link + "/action_detail",
+			type: "POST",
+			dataType: "json",
+			data: formData,
+			success: function (response) {
+				if (response) {
+					$("#detailModal").modal("hide");
+					$("#example1").DataTable().ajax.reload(null, false);
+				}
+				// alert(response.result);
+			},
+		});
+	});
+}
 
 $(function () {
 	$("#btn_add").on("click", function () {
@@ -77,15 +124,29 @@ $(function () {
 		});
 	});
 });
+$("#example1").on("click", ".btn_delete", function () {
+	var id = $(this).attr("data-id");
+	$.ajax({
+		url: link + "/delete",
+		type: "POST",
+		dataType: "json",
+		data: {
+			id: id,
+		},
+		success: function (response) {
+			$("#example1").DataTable().ajax.reload(null, false);
+		},
+	});
+});
 
 
-function callRoot(tipe) {
+function callRoot(tipe, key = "") {
 	if (tipe == 1) {
 		text_placeholder = "Search root";
 	} else {
 		text_placeholder = "No Root";
 	}
-	$('#root').select2({
+	$('#root' + key).select2({
 		ajax: {
 			url: link + "/show_root",
 			dataType: 'json',
@@ -108,16 +169,16 @@ function callRoot(tipe) {
 	});
 }
 
-function callTest(id = "") {
-	$("#tipe").change(function () {
-		if ($("#tipe").val() == 1) {
-			callRoot(1);
+function callTest(id = "", key = "") {
+	$("#tipe" + key).change(function () {
+		if ($("#tipe" + key).val() == 1) {
+			callRoot(1, key);
 			if (id !== null) {
-				$("#root").val(id).trigger('change');
+				$("#root" + key).val(id).trigger('change');
 			}
 		} else {
-			callRoot(0);
-			$("#root").val('').trigger('change');
+			callRoot(0, key);
+			$("#root" + key).val('').trigger('change');
 		}
 	});
 };
@@ -137,10 +198,11 @@ $.ajax({
 			"processing": false,
 			"serverSide": true,
 			"autoWidth": false,
+			"responsive": true,
 			"scrollCollapse": true,
 			"info": false,
-			"lengthChange": true,
-			"scrollY": "400px",
+			"orderable": true,
+			"lengthChange": false,
 			"ajax": {
 				"url": link + "/serverside",
 				"type": "POST"
