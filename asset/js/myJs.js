@@ -1,9 +1,27 @@
 var url = window.location.pathname;
 var parts = url.split("/");
 var link = parts[parts.length - 1];
-
-
 $(function () {
+
+	$("#btn_add").on("click", function () {
+		$.ajax({
+			url: link + "/addModal",
+			type: "POST",
+			dataType: "json",
+			success: function (response) {
+				$("#addModal").modal("show");
+				$("#form-field-add").html(response.data);
+				$(".select2-purple").select2();
+				$(".select2bs4").select2({
+					theme: "bootstrap4",
+				});
+				callTest();
+				callRoot(0);
+				date_time_picker();
+			},
+		});
+	});
+
 	$("#example1").on("click", ".btn_edit", function () {
 		var id = $(this).attr("data-id");
 		$.ajax({
@@ -47,8 +65,31 @@ $(function () {
 			},
 		});
 	});
-
 });
+
+$(function () {
+	submitData();
+	deleteData();
+	showDataTables();
+});
+
+
+// End Method Modal
+function submitData() {
+	$("#btn_submit").on("click", function () {
+		var data = $("#form-add").serialize();
+		$.ajax({
+			url: link + "/add",
+			type: "POST",
+			dataType: "json",
+			data: data,
+			success: function (response) {
+				$("#addModal").modal("hide");
+				$("#example1").DataTable().ajax.reload(null, false);
+			},
+		});
+	});
+};
 
 function updateData() {
 	$("#btn_update_data").on("click", function () {
@@ -91,54 +132,22 @@ function detailData() {
 	});
 }
 
-$(function () {
-	$("#btn_add").on("click", function () {
+function deleteData() {
+	$("#example1").on("click", ".btn_delete", function () {
+		var id = $(this).attr("data-id");
 		$.ajax({
-			url: link + "/addModal",
+			url: link + "/delete",
 			type: "POST",
 			dataType: "json",
-			success: function (response) {
-				$("#addModal").modal("show");
-				$("#form-field-add").html(response.data);
-				$(".select2-purple").select2();
-				$(".select2bs4").select2({
-					theme: "bootstrap4",
-				});
-				callTest();
-				callRoot(0);
+			data: {
+				id: id,
 			},
-		});
-	});
-
-	$("#btn_submit").on("click", function () {
-		var data = $("#form-add").serialize();
-		$.ajax({
-			url: link + "/add",
-			type: "POST",
-			dataType: "json",
-			data: data,
 			success: function (response) {
-				$("#addModal").modal("hide");
 				$("#example1").DataTable().ajax.reload(null, false);
 			},
 		});
 	});
-});
-$("#example1").on("click", ".btn_delete", function () {
-	var id = $(this).attr("data-id");
-	$.ajax({
-		url: link + "/delete",
-		type: "POST",
-		dataType: "json",
-		data: {
-			id: id,
-		},
-		success: function (response) {
-			$("#example1").DataTable().ajax.reload(null, false);
-		},
-	});
-});
-
+};
 
 function callRoot(tipe, key = "") {
 	if (tipe == 1) {
@@ -183,31 +192,43 @@ function callTest(id = "", key = "") {
 	});
 };
 
+function showDataTables() {
+	$.ajax({
+		url: link + "/dataTablesCss",
+		type: "POST",
+		dataType: "json",
+		success: function (response) {
+			var columnDefsVal = [{
+				orderable: false,
+				targets: [-1],
+				width: response.width,
+			}];
+			$('#example1').DataTable({
+				"scrollY": 300,
+				"scrollX": true,
+				"fixedColumns": true,
+				"fixedHeaders": true,
+				"processing": true,
+				"serverSide": true,
+				"autoWidth": false,
+				"responsive": false,
+				"scrollCollapse": true,
+				"info": true,
+				"orderable": true,
+				"lengthChange": true,
+				"ajax": {
+					"url": link + "/serverside",
+					"type": "POST"
+				},
+				"columnDefs": columnDefsVal,
+			});
+		},
+	});
+};
 
-$.ajax({
-	url: link + "/dataTablesCss",
-	type: "POST",
-	dataType: "json",
-	success: function (response) {
-		var columnDefsVal = [{
-			orderable: false,
-			targets: [-1],
-			width: response.width,
-		}];
-		$('#example1').DataTable({
-			"processing": false,
-			"serverSide": true,
-			"autoWidth": false,
-			"responsive": true,
-			"scrollCollapse": true,
-			"info": false,
-			"orderable": true,
-			"lengthChange": false,
-			"ajax": {
-				"url": link + "/serverside",
-				"type": "POST"
-			},
-			"columnDefs": columnDefsVal,
-		});
-	},
-});
+function date_time_picker() {
+	//Date picker
+	$('#reservationdate').datetimepicker({
+		format: 'L'
+	});
+}

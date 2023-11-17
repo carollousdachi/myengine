@@ -1,9 +1,14 @@
 /* Hide scrollbar for Chrome, Safari and Opera */
-
-.dataTables_scrollHeadInner, .table{
-    width:100%!important;
+.dataTables_scrollHeadInner, .table td{
+    /* width: fit-content; */
+    min-width: 200px;
+    max-width: auto;
+    /* display: inline-block; */
+    /* overflow: hidden; */
+    /* text-overflow: ellipsis; */
+    /* white-space: nowrap; */
   }
-  
+
 .dark-mode {
     background-color: #454d55!important;
     color: #fff;

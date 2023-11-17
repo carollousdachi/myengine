@@ -6,7 +6,7 @@
                     <div id="preview"></div>
                     <button class="btn btn-sm btn-success" id="btn_add" type="button">Add <?= ucfirst($getMenu) ?></button>
                     <hr />
-                    <table id="example1" class="table table-bordered table-striped">
+                    <table id="example1" class="table table-bordered table-striped" style="width: 100% !important">
                         <?= $hTable; ?>
                     </table>
 

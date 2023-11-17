@@ -14,6 +14,7 @@ class My_model extends CI_Model
     public $column_serch = ["name"];
     public $column_order = [];
     public $changeOption = ["tipe", "root"];
+    public $file = [];
     public $disable = [];
     public $buttons = [];
     public $form_html = "";
@@ -235,10 +236,39 @@ class My_model extends CI_Model
         $result = "";
         $array = ['edit' => 'primary', 'delete' => 'danger'];
         if (!empty($this->buttons)) $array = array_merge($array, $this->buttons);
+        // $result .= '<div class="form-group" style="width:150px;">';
         foreach ($array as $key => $value) {
-            $result .= '<button data-id="' . $id . '" class="btn btn-' . $value . ' btn_' . $key . '" style="margin-left: 5px;">' . ucfirst($key) . '</button>';
+            $result .= '<button data-id="' . $id . '" class="btn btn-' . $value . ' btn_' . $key . ' form-control" style="margin-left: 5px;">' . ucfirst($key) . '</button>';
         }
+        // $result .= '</div>';
         return $result;
+    }
+
+    public function call_date($value = "")
+    {
+        $html = '';
+        $html .= '<div class="input-group date" id="reservationdate" data-target-input="nearest">';
+        $html .= '<input type="text" class="form-control datetimepicker-input" data-target="#reservationdate" / value="' . $value . '">';
+        $html .= '<div class="input-group-append" data-target="#reservationdate" data-toggle="datetimepicker">';
+        $html .= '<div class="input-group-text"><i class="fa fa-calendar"></i></div>';
+        $html .= '</div></div>';
+        return $html;
+    }
+
+    public function call_file()
+    {
+        $html = "";
+        $html .= '<div class="input-group">
+        <div class="custom-file">
+          <input type="file" class="custom-file-input" id="exampleInputFile">
+          <label class="custom-file-label" for="exampleInputFile">Choose file</label>
+        </div>
+        <div class="input-group-append">
+          <span class="input-group-text">Upload</span>
+        </div>
+      </div>';
+
+        return $html;
     }
 
     public function option($name = "", $value = "", $where = "", $type = "", $join = "")
@@ -339,17 +369,27 @@ class My_model extends CI_Model
                     if (in_array($value->name, $validate_option)) {
                         $this->form_html .= $this->master->callOption($value->name, "", "", "", $value->name);
                     } else {
-                        if ($value->type == 'int') {
-                            empty($this->master->gets()) ? $count = 1 : $count = count($this->master->gets()) + 1;
+                        if (in_array($value->name, $this->file)) {
                             $this->form_html .= '<label>' . ucfirst($value->name) . '</label>';
-                            $this->form_html .= '<input id="' . $value->name . '" name="' . $value->name . '" class="form-control" type="number" min="' . $count . '" value=' . $count . '>';
+                            $this->form_html .= $this->master->call_file();
                         } else {
-                            if ($value->name == 'password') {
-                                $this->form_html .= '<label>' . ucfirst($value->type) . '</label>';
-                                $this->form_html .= '<input id="' . $value->name . '" name="' . $value->name . '" class="form-control" type="password">';
-                            } else {
+                            if ($value->type == 'date') {
                                 $this->form_html .= '<label>' . ucfirst($value->name) . '</label>';
-                                $this->form_html .= '<input id="' . $value->name . '" name="' . $value->name . '" class="form-control" type="text">';
+                                $this->form_html .= $this->master->call_date();
+                            } else {
+                                if ($value->type == 'int') {
+                                    empty($this->master->gets()) ? $count = 1 : $count = count($this->master->gets()) + 1;
+                                    $this->form_html .= '<label>' . ucfirst($value->name) . '</label>';
+                                    $this->form_html .= '<input id="' . $value->name . '" name="' . $value->name . '" class="form-control" type="number" min="' . $count . '" value=' . $count . '>';
+                                } else {
+                                    if ($value->name == 'password') {
+                                        $this->form_html .= '<label>' . ucfirst($value->type) . '</label>';
+                                        $this->form_html .= '<input id="' . $value->name . '" name="' . $value->name . '" class="form-control" type="password">';
+                                    } else {
+                                        $this->form_html .= '<label>' . ucfirst($value->name) . '</label>';
+                                        $this->form_html .= '<input id="' . $value->name . '" name="' . $value->name . '" class="form-control" type="text">';
+                                    }
+                                }
                             }
                         }
                     }
@@ -427,8 +467,8 @@ class My_model extends CI_Model
     public function dataTablesCss()
     {
         if (!empty($this->buttons)) {
-            $width = "300px";
-        } else $width = "200px";
+            $width = "150px";
+        } else $width = "150px";
 
         return $width;
     }

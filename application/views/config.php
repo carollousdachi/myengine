@@ -53,34 +53,6 @@
                             </div>
                         </div>
                     </div>
-
-                    <div class="modal fade" id="permissionModal" role="dialog">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h4 class="modal-title">
-                                        Edit Data <?= ucfirst($getMenu) ?>
-                                    </h4>
-                                    <button class="close" data-dismiss="modal" type="button">
-                                        ×
-                                    </button>
-                                </div>
-                                <div class="modal-body">
-                                    <form id="form-permission" method="post">
-                                        <div id="form-field-permission"></div>
-                                    </form>
-                                </div>
-                                <div class="modal-footer">
-                                    <button class="btn btn-success" id="btn_update_data" type="button">
-                                        Update
-                                    </button>
-                                    <button class="btn btn-default" data-dismiss="modal" type="button">
-                                        Close
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
