@@ -193,37 +193,40 @@ function callTest(id = "", key = "") {
 };
 
 function showDataTables() {
-	$.ajax({
-		url: link + "/dataTablesCss",
-		type: "POST",
-		dataType: "json",
-		success: function (response) {
-			var columnDefsVal = [{
-				orderable: false,
-				targets: [-1],
-				width: response.width,
-			}];
-			$('#example1').DataTable({
-				"scrollY": 300,
-				"scrollX": true,
-				"fixedColumns": true,
-				"fixedHeaders": true,
-				"processing": true,
-				"serverSide": true,
-				"autoWidth": false,
-				"responsive": false,
-				"scrollCollapse": true,
-				"info": true,
-				"orderable": true,
-				"lengthChange": true,
-				"ajax": {
-					"url": link + "/serverside",
-					"type": "POST"
-				},
-				"columnDefs": columnDefsVal,
-			});
-		},
-	});
+	var table =
+		$.ajax({
+			url: link + "/dataTablesCss",
+			type: "POST",
+			dataType: "json",
+			success: function (response) {
+				var columnDefsVal = [{
+					orderable: false,
+					targets: [-1],
+					width: response.width,
+				}];
+				$('#example1').DataTable({
+					"scrollY": 300,
+					"scrollX": true,
+					"fixedColumns": {
+						"leftColumns": 1,
+					},
+					"processing": true,
+					"serverSide": true,
+					"autoWidth": false,
+					"responsive": false,
+					"scrollCollapse": true,
+					"info": true,
+					"orderable": true,
+					"lengthChange": true,
+					"ajax": {
+						"url": link + "/serverside",
+						"type": "POST"
+					},
+					"columnDefs": columnDefsVal,
+				});
+			},
+		});
+	table.fixedHeader.adjust();
 };
 
 function date_time_picker() {

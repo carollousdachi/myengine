@@ -144,8 +144,9 @@ class engine extends CI_Controller
 
         $data['id'] = $this->master->getLastId(0);
         $data['creator'] = $this->user->get(['id' => $_SESSION['id']])->username;
-
-        $data = $this->master->add($data);
+        print_r($data);
+        die();
+        // $data = $this->master->add($data);
 
         $output = array(
             "response" => 'success'

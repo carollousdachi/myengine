@@ -62,7 +62,8 @@ class My_model extends CI_Model
     {
         if (empty($code)) {
             if (empty($this->table_prefix)) {
-                $this->table_prefix = substr($this->table, 0, 1);
+                $get_uniq = $this->navigation->gets(['link' => $this->table]);
+                $this->table_prefix = strtoupper(substr($this->table, 0, 4)) . substr($get_uniq[0]->id, -3);
             }
             $code = $this->table_prefix . date('Ymd');
         }
